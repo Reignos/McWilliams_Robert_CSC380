@@ -42,7 +42,6 @@ public class Server {
                         print = a + " + " + b + " = " + mathLogic.add(a,b);
                         out.println(print);
                     }
-
                     else if(spaceSplit[0].toLowerCase().equals("sub")){
                         print = a + " - " + b + " = " + mathLogic.subtract(a,b);
                         out.println(print);
