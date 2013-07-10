@@ -16,9 +16,54 @@ import java.net.Socket;
  */
 public class Server {
 
+    private class ClientRun extends Thread{
+        public Socket clientSocket;
+        public ClientRun(Socket cSocket){
+            clientSocket = cSocket;
+        }
+        @Override
+        public void run() {
+            try{
+                MathLogic mathLogic = new MathLogic();
+                PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                BufferedReader in =
+                        new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                String inputLine;
+
+                while ((inputLine = in.readLine()) != null) {
+                    if (inputLine.toLowerCase().equals("bye")){
+                        break;
+                    }
+                    String[] spaceSplit = inputLine.split(" ");
+                    int a = Integer.parseInt(spaceSplit[1]);
+                    int b = Integer.parseInt(spaceSplit[2]);
+                    String print = "";
+                    if(spaceSplit[0].toLowerCase().equals("add")){
+                        print = a + " + " + b + " = " + mathLogic.add(a,b);
+                        out.println(print);
+                    }
+
+                    else if(spaceSplit[0].toLowerCase().equals("sub")){
+                        print = a + " - " + b + " = " + mathLogic.subtract(a,b);
+                        out.println(print);
+                    }
+                    System.out.println(print + " sent to Client");
+                }
+
+                out.close();
+                in.close();
+                clientSocket.close();
+            }
+            catch (IOException e) {
+                System.out.println("Accept failed: 4444");
+                System.exit(-1);
+            }
+        }
+    }
+
     public Server(){
         System.out.println("Server Running");
-        MathLogic mathLogic = new MathLogic();
+
         ServerSocket serverSocket = null;
         try {
             serverSocket = new ServerSocket(4444);
@@ -28,35 +73,17 @@ public class Server {
             System.exit(-1);
         }
 
-        Socket clientSocket = null;
+        boolean running = true;
+        do{
         try {
-            clientSocket = serverSocket.accept();
-            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-            BufferedReader in =
-                    new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            String inputLine;
-
-            while ((inputLine = in.readLine()) != null) {
-                if (inputLine.toLowerCase().equals("bye"))
-                    break;
-                String[] spaceSplit = inputLine.split(" ");
-                int a = Integer.parseInt(spaceSplit[1]);
-                int b = Integer.parseInt(spaceSplit[2]);
-                if(spaceSplit[0].toLowerCase().equals("add"))
-                    out.println(a + " + " + b + " = " + mathLogic.add(a,b));
-
-                else if(spaceSplit[0].toLowerCase().equals("sub"))
-                    out.println(a + " - " + b + " = " + mathLogic.subtract(a, b));
-            }
-            out.close();
-            in.close();
-            clientSocket.close();
-            serverSocket.close();
+            ClientRun clientRun = new ClientRun(serverSocket.accept());
+            clientRun.start();
         }
         catch (IOException e) {
             System.out.println("Accept failed: 4444");
             System.exit(-1);
         }
+        } while(running);
     }
 
     public static void main(String [ ] args){
